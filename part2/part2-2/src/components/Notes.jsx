@@ -18,12 +18,12 @@ const PersonForm = ({onSubmit,newName,newPhone,handleNameChange,handlePhoneChang
   )
 }
 
-const Persons = ({findName,findPersons,persons,setPersons}) =>{
+const Persons = ({findName,findPersons,persons,setPersons,setErrorMessage,setClassName}) =>{
   return(
     <>
       {findPersons(findName).map(person =>(
         <>
-          <p>{person.name} {person.number} <ButtonDelete name={person.name} id={person.id} setPersons={setPersons} persons={persons} /> </p>
+          <p>{person.name} {person.number} <ButtonDelete setClassName={setClassName} personName={person.name} setErrorMessage={setErrorMessage} name={person.name} id={person.id} setPersons={setPersons} persons={persons} /> </p>
         </>
       ))}
     </>
@@ -34,20 +34,19 @@ const findNames = (array, nameFragment) =>{
   return array.filter(person => person.name.toLowerCase().includes(nameFragment.toLowerCase()))
 }
 
-const ButtonDelete = ({id,name,setPersons,persons}) =>{
+const ButtonDelete = ({id,name,setPersons,persons,setErrorMessage,personName,setClassName}) =>{
   return(
   <button 
       onClick={ () =>{
           if(window.confirm(`Delete ${name}?`)){
             noteServices
-              .Delete(id)
+              .Delete(id,setErrorMessage,personName,setClassName)
               .then(status =>{
                 if(status === 200 || status === 204){
                   setPersons(persons.filter(person => person.id !== id))
                 }
               })
           }
-
         }
       }
   >
@@ -57,7 +56,19 @@ const ButtonDelete = ({id,name,setPersons,persons}) =>{
   )
 }
 
-const found = (persons,newName) => {persons.find((person) => person.name.toLocaleLowerCase() === newName.toLocaleLowerCase())};
+const Notification = ({ message,newName,setErrorMessage,className }) => {
+  if (message === null) {
+    return null
+  }
+
+  return (
+    <div className={className}>
+      {message}
+    </div>
+  )
+}
 
 
-export {Filter,PersonForm,Persons,findNames,found,ButtonDelete}
+const found = (persons,newName) => {return persons.find((person) => person.name.toLocaleLowerCase() === newName.toLocaleLowerCase())}
+
+export {Filter,PersonForm,Persons,findNames,found,ButtonDelete,Notification}

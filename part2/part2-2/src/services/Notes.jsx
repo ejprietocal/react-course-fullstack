@@ -12,13 +12,21 @@ const create = newObject =>{
     return request.then(response => response.data)
 }
 
-const Delete = (id) =>{
+const Delete = (id,setErrorMessage,personName,setClassName) =>{
     return axios.delete(`${baseUrl}/${id}`)
             .then(response=>{return response.status})
             .catch(error => {
-                console.error('Error deleting person:', error);
-                throw error; // Propaga el error para que sea manejado fuera de la función
+                setErrorMessage(`Ìnformation of ${personName} has already been removed`)
+                setClassName('error')
+                setTimeout(() => {
+                    setErrorMessage(null)
+                  }, 5000)
             });
 }
 
-export default {getAll, create,Delete}
+const updatePerson = (id, newObject) =>{
+    const request = axios.put(`${baseUrl}/${id}`, newObject)
+    return request.then(response => response.data)
+  }     
+
+export default {getAll, create,Delete,updatePerson}

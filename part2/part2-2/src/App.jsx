@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import {Filter,PersonForm,Persons,findNames,found} from './components/Notes'
+import {Filter,PersonForm,Persons,findNames,found,Notification} from './components/Notes'
 import noteServices from './services/Notes'
+import './index.css'
  
 
 const App = () => {
@@ -8,6 +9,9 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newPhone, setNewPhone] = useState('')
   const [findName, setFindName] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
+  const [className, setClassName] = useState('')
+
 
   useEffect(() => {
     refreshServices(); // Llama a la función refreshServices al montar el componente
@@ -17,6 +21,7 @@ const App = () => {
     noteServices.getAll()
       .then(directory => {
         setPersons(directory);
+        setErrorMessage(null)
       })
       .catch(error => {
         console.error('Error fetching data:', error);
@@ -31,6 +36,11 @@ const App = () => {
       setPersons(persons.concat(returnedPerson));
       setNewName('');
       setNewPhone('');
+      setClassName('success')
+      setErrorMessage(`Added ${returnedPerson.name}`)
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
     })
   }
 
@@ -38,14 +48,26 @@ const App = () => {
     event.preventDefault();
     const founded = found(persons,newName)
     if(founded){
-      alert(`${newName} is already added to phonebook`)
-    }
-    else{
-      const personObject = {
+      if(window.confirm(`${newName} is already added to phonebook, replace de old number with a new one?`)){
+        const personObject = {
+          ...founded,
+          number: newPhone,
+        } 
+        noteServices
+          .updatePerson(founded.id,personObject)
+          .then((response)=>{
+            const personFiltered = persons.map(person => person.id === founded.id ? response : person )
+            setPersons(personFiltered)
+            setNewName('')
+            setNewPhone('')
+          })
+        }
+      }
+      else{
+        const personObject = {
           name: newName,
           number: newPhone,
-      }
-
+        }
       addServices(personObject)
     }
   }
@@ -58,13 +80,14 @@ const App = () => {
     <>
       <div>
         <h2>Phonebook</h2>
+        <Notification className={className} setClassName={setClassName} newName={newName}  message={errorMessage} />
         <Filter findName={findName} handleFindChange={handleFindChange} />
       </div>
       <div>
         <h2>Add a new</h2>
-        <PersonForm onSubmit={addClient} newName={newName} newPhone={newPhone} handleNameChange={handleNameChange} handlePhoneChange={handlePhoneChange} />
+        <PersonForm  onSubmit={addClient} newName={newName} newPhone={newPhone} handleNameChange={handleNameChange} handlePhoneChange={handlePhoneChange} />
         <h2>Numbers</h2>
-        <Persons refreshServices={refreshServices} findName={findName} findPersons={findPersons} persons={persons} setPersons={setPersons} />
+        <Persons setClassName={setClassName} setErrorMessage={setErrorMessage} refreshServices={refreshServices} findName={findName} findPersons={findPersons} persons={persons} setPersons={setPersons} />
       </div>
     </>
 
